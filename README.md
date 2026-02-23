@@ -1,3 +1,5 @@
+**It should be noted this website is entirely meant to look like AI slop, because it is.**
+
 # 🐸 muckfrog.uk - The Ultimate Roast Website
 
 Welcome to the digital monument to one person's questionable life choices. This is a dedicated website celebrating (roasting) the legendary **muck_frog**.
