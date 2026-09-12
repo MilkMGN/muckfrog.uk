@@ -17,6 +17,7 @@
 </head>
 <body>
   <div class="card">
+    <div id="protocolWarning" style="display:none;background:#3a1f1f;padding:0.75rem;border-radius:6px;margin-bottom:0.75rem;color:#ffdede;">Warning: this page was opened directly from disk. The Q&amp;A requires the server. Run <code>node server.js</code> and open <a href="http://localhost:3000/qa/">http://localhost:3000/qa/</a> instead.</div>
     <h1>Muck Frog — Q&amp;A</h1>
     <p>You can ask questions publicly without an account. To answer questions, login via the <a href="login.html" class="btn">Login</a> page.</p>
 
@@ -31,5 +32,16 @@
     <h2>Questions</h2>
     <div id="questions"></div>
   </div>
+  <script>
+    // Show a clear warning when the page is opened via file:// (users often do this)
+    (function(){
+      try{
+        if(location.protocol === 'file:'){
+          var w = document.getElementById('protocolWarning');
+          if(w) w.style.display = 'block';
+        }
+      }catch(e){/* ignore */}
+    })();
+  </script>
 </body>
 </html>

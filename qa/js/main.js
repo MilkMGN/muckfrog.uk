@@ -1,8 +1,16 @@
 async function fetchQuestions(){
-  const res = await fetch('/api/questions');
-  const arr = await res.json();
   const out = document.getElementById('questions');
   out.innerHTML = '';
+  let arr = [];
+  try {
+    const res = await fetch('/api/questions');
+    if (!res.ok) throw new Error('Server error: ' + res.status);
+    arr = await res.json();
+  } catch (err) {
+    out.textContent = 'Unable to load questions — is the server running?';
+    console.error('fetchQuestions error', err);
+    return;
+  }
   const token = localStorage.getItem('qa_token');
   arr.forEach(q => {
     const div = document.createElement('div');
@@ -39,10 +47,19 @@ document.addEventListener('DOMContentLoaded', ()=>{
     const question = document.getElementById('askQuestion').value;
     const msg = document.getElementById('askMsg');
     msg.textContent = '';
-    const r = await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,question})});
-    const j = await r.json();
-    if(r.ok){ msg.textContent = 'Question submitted — thanks! (Check back later for answers)'; askForm.reset(); }
-    else msg.textContent = j.error||'Failed to submit (rate limit: 1/hour)';
+    try {
+      const button = document.getElementById('askBtn');
+      button.disabled = true;
+      const r = await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,question})});
+      const j = await r.json().catch(()=>({}));
+      if(r.ok){ msg.textContent = 'Question submitted — thanks! (Check back later for answers)'; askForm.reset(); fetchQuestions(); }
+      else msg.textContent = j.error||('Failed to submit (status: '+(r.status||'unknown')+')');
+    } catch (err){
+      msg.textContent = 'Failed to submit — is the server running?';
+      console.error('ask submit error', err);
+    } finally {
+      try { document.getElementById('askBtn').disabled = false; } catch(e){}
+    }
   });
   fetchQuestions();
   setInterval(fetchQuestions, 30*1000);
