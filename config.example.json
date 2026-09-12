@@ -1,0 +1,5 @@
+{
+  "username": "admin",
+  "passwordHash": "",
+  "jwtSecret": "replace-with-random-string"
+}

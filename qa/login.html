@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Login — Muck Frog Q&A</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;background:#071207;color:#e8f5e8;padding:1rem}
+    .card{background:#072a07;padding:1rem;border-radius:8px;border:1px solid #2b7a2b;max-width:600px;margin:0 auto}
+    input{width:100%;padding:0.5rem;margin:0.4rem 0;border-radius:6px;border:1px solid #214021;background:#0b1b0b;color:#eaf6ea}
+    .btn{background:#FFD700;color:#071207;padding:0.5rem 0.8rem;border-radius:6px;text-decoration:none;font-weight:bold;border:none}
+  </style>
+  <script>
+    async function doLogin(e){
+      e.preventDefault();
+      const u=document.getElementById('username').value;
+      const p=document.getElementById('password').value;
+      const res=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+      const j=await res.json();
+      if(res.ok && j.token){ localStorage.setItem('qa_token', j.token); alert('Logged in'); window.location.href='index.html'; }
+      else alert(j.error||'Login failed');
+    }
+  </script>
+</head>
+<body>
+  <div class="card">
+    <h1>Admin Login</h1>
+    <form onsubmit="doLogin(event)">
+      <input id="username" placeholder="username" required>
+      <input id="password" placeholder="password" type="password" required>
+      <div style="margin-top:0.5rem;"><button class="btn">Login</button></div>
+    </form>
+    <p style="margin-top:1rem;color:#9fd29f">After login you can answer questions on the main Q&amp;A page.</p>
+  </div>
+</body>
+</html>
