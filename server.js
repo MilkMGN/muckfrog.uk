@@ -33,17 +33,37 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Rate limiter: 1 ask per hour per IP
+// Banned words filter
+const BANNED_WORDS = [
+  'spam', 'viagra', 'casino', 'bitcoin', 'crypto', 'forex',
+  'nigger', 'faggot', 'cunt', 'slut', 'whore', 'retard',
+  'porn', 'xxx', 'sex', 'retard',
+  'genocide', 'terrorist', 'bomb', 'kill yourself',
+  'hate crime', 'death threat'
+];
+
+function containsBannedWords(text) {
+  const lower = String(text).toLowerCase();
+  return BANNED_WORDS.some(word => lower.includes(word.toLowerCase()));
+}
+
+// Rate limiter: 1 ask per 30 seconds per IP (use X-Forwarded-For for nginx proxy)
 const askLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
+  windowMs: 30 * 1000, // 30 seconds
   max: 1,
-  message: { error: 'Rate limit: only 1 question per hour allowed from this IP' }
+  keyGenerator: (req) => {
+    return req.headers['x-forwarded-for']?.split(',')[0].trim() || req.ip;
+  },
+  message: { error: 'Rate limit: only 1 question per 30 seconds allowed from this IP' }
 });
 
 app.post('/api/ask', askLimiter, (req, res) => {
   const { name, question } = req.body || {};
   if (!question || typeof question !== 'string' || question.trim().length === 0) {
     return res.status(400).json({ error: 'Question is required' });
+  }
+  if (containsBannedWords(question)) {
+    return res.status(400).json({ error: 'Question contains prohibited content' });
   }
   const q = {
     id: uuidv4(),
@@ -94,6 +114,9 @@ function authMiddleware(req, res, next) {
 app.post('/api/answer', authMiddleware, (req, res) => {
   const { id, answer } = req.body || {};
   if (!id || !answer) return res.status(400).json({ error: 'id and answer required' });
+  if (containsBannedWords(answer)) {
+    return res.status(400).json({ error: 'Answer contains prohibited content' });
+  }
   const arr = JSON.parse(fs.readFileSync(QUESTIONS_FILE, 'utf8'));
   const idx = arr.findIndex(x => x.id === id);
   if (idx === -1) return res.status(404).json({ error: 'Question not found' });
